@@ -1,0 +1,25 @@
+[Unit]
+Description=MongoDB Database Server
+Documentation=https://docs.mongodb.com/manual
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=mongodb
+Group=mongodb
+EnvironmentFile=-/etc/default/mongod
+ExecStart=/usr/bin/mongod --config /etc/mongod.conf
+PIDFile=/var/run/mongodb/mongod.pid
+LimitFSIZE=infinity
+LimitCPU=infinity
+LimitAS=infinity
+LimitNOFILE=64000
+LimitNPROC=64000
+LimitMEMLOCK=infinity
+TasksMax=infinity
+TasksAccounting=false
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

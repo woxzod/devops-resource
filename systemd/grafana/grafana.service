@@ -1,0 +1,23 @@
+[Unit]
+Description=Grafana - Visualization and Dashboards
+Documentation=https://grafana.com/docs/grafana/latest/
+After=network.target
+
+[Service]
+Type=simple
+User=grafana
+Group=grafana
+ExecStart=/usr/sbin/grafana-server \
+    --config=/etc/grafana/grafana.ini \
+    --pidfile=/var/run/grafana/grafana-server.pid \
+    --packaging=rpm \
+    cfg:default.paths.logs=/var/log/grafana \
+    cfg:default.paths.data=/var/lib/grafana \
+    cfg:default.paths.plugins=/var/lib/grafana/plugins \
+    cfg:default.paths.provisioning=/etc/grafana/provisioning
+Restart=always
+RestartSec=10
+WorkingDirectory=/usr/share/grafana
+
+[Install]
+WantedBy=multi-user.target

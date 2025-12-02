@@ -1,0 +1,106 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9095
+  log_level: info
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /tmp/loki
+  storage:
+    filesystem:
+      chunks_directory: /tmp/loki/chunks
+      rules_directory: /tmp/loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+# THIS IS THE KEY SECTION - LIMITS CONFIG
+limits_config:
+  # CRITICAL: Disable structured metadata for schema v11
+  allow_structured_metadata: false
+  
+  # Increase ingestion rate limits to handle multiple servers
+  ingestion_rate_mb: 32
+  ingestion_burst_size_mb: 64
+  
+  # Per-stream rate limits
+  per_stream_rate_limit: 15MB
+  per_stream_rate_limit_burst: 30MB
+  
+  # Stream limits
+  max_streams_per_user: 0
+  max_global_streams_per_user: 50000
+  
+  # Cardinality limits
+  cardinality_limit: 100000
+  max_label_names_per_series: 30
+  max_label_name_length: 1024
+  max_label_value_length: 2048
+  
+  # Query limits
+  max_query_length: 721h
+  max_query_lookback: 721h
+  max_query_series: 100000
+  max_query_parallelism: 32
+  
+  # Line size limits
+  max_line_size: 256KB
+  max_line_size_truncate: true
+  
+  # Retention and samples
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+  retention_period: 744h
+  
+  # Cache settings
+  split_queries_by_interval: 15m
+
+schema_config:
+  configs:
+    - from: 2020-10-24
+      store: boltdb-shipper
+      object_store: filesystem
+      schema: v11
+      index:
+        prefix: index_
+        period: 24h
+
+query_range:
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 100
+
+storage_config:
+  boltdb_shipper:
+    active_index_directory: /tmp/loki/boltdb-shipper-active
+    cache_location: /tmp/loki/boltdb-shipper-cache
+    cache_ttl: 24h
+  filesystem:
+    directory: /tmp/loki/chunks
+
+compactor:
+  working_directory: /tmp/loki/compactor
+  compaction_interval: 10m
+  retention_enabled: true
+  retention_delete_delay: 2h
+  retention_delete_worker_count: 150
+  delete_request_store: filesystem
+
+ruler:
+  storage:
+    type: local
+    local:
+      directory: /tmp/loki/rules
+  rule_path: /tmp/loki/rules-temp
+  ring:
+    kvstore:
+      store: inmemory
+  enable_api: true
+
+analytics:
+  reporting_enabled: false

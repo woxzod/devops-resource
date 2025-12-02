@@ -1,0 +1,27 @@
+[Unit]
+Description=cAdvisor - Container Metrics Exporter
+Documentation=https://github.com/google/cadvisor
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=root
+ExecStartPre=-/usr/bin/docker stop cadvisor
+ExecStartPre=-/usr/bin/docker rm cadvisor
+ExecStart=/usr/bin/docker run --rm \
+    --name=cadvisor \
+    --privileged \
+    --volume=/:/rootfs:ro \
+    --volume=/var/run:/var/run:ro \
+    --volume=/sys:/sys:ro \
+    --volume=/var/lib/docker/:/var/lib/docker:ro \
+    --volume=/dev/disk/:/dev/disk:ro \
+    --publish=8080:8080 \
+    gcr.io/cadvisor/cadvisor:latest
+ExecStop=/usr/bin/docker stop cadvisor
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
