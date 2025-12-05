@@ -1,0 +1,21 @@
+[Unit]
+Description=Grafana Tempo
+Documentation=https://grafana.com/docs/tempo/latest/
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tempo
+Group=tempo
+ExecStart=/usr/bin/tempo -config.file=/etc/tempo/config.yml
+Restart=on-failure
+RestartSec=5s
+LimitNOFILE=65536
+StandardOutput=journal
+StandardError=journal
+MemoryLimit=4G
+CPUQuota=200%
+
+[Install]
+WantedBy=multi-user.target
