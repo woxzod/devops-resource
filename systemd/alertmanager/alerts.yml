@@ -1,0 +1,138 @@
+groups:
+  - name: server_alerts
+    rules:
+
+    # 🧠 Server Down
+    - alert: NodeDown
+      expr: up == 0
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Instance {{ $labels.instance }} is down"
+        description: "Prometheus has not received any metrics from {{ $labels.instance }} for more than 2 minutes."
+
+    # 💻 High CPU Usage
+    - alert: HighCPUUsage
+      expr: 100 - (avg by(instance)(irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 70
+      for: 1m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High CPU usage on {{ $labels.instance }}"
+        description: "CPU usage is above 70% for more than 2 minutes."
+        value: "{{ $value | printf \"%.2f\" }}%"
+
+    - alert: CriticalCPUUsage
+      expr: 100 - (avg by(instance)(irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "CRITICAL: CPU usage on {{ $labels.instance }}"
+        description: "CPU usage is above 90% for more than 2 minutes."
+        value: "{{ $value | printf \"%.2f\" }}%"
+
+    # 🧠 High Memory Usage
+    - alert: HighMemoryUsage
+      expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 75
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High memory usage on {{ $labels.instance }}"
+        description: "Memory usage is above 75%."
+        value: "{{ $value | printf \"%.2f\" }}%"
+
+    - alert: CriticalMemoryUsage
+      expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 90
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "CRITICAL: Memory usage on {{ $labels.instance }}"
+        description: "Memory usage is above 90%."
+        value: "{{ $value | printf \"%.2f\" }}%"
+
+    # 💾 Disk Usage
+    - alert: HighDiskUsage
+      expr: (1 - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"}) * 100 > 80
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High disk usage on {{ $labels.instance }}"
+        description: "Disk usage is above 80%."
+        value: "{{ $value | printf \"%.2f\" }}%"
+
+    - alert: CriticalDiskUsage
+      expr: (1 - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"}) * 100 > 90
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "CRITICAL: Disk usage on {{ $labels.instance }}"
+        description: "Disk usage is above 90%."
+        value: "{{ $value | printf \"%.2f\" }}%"
+
+    # 💾 Read-only Filesystem
+    - alert: FilesystemReadOnly
+      expr: node_filesystem_readonly == 1
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Filesystem is read-only on {{ $labels.instance }}"
+        description: "Filesystem {{ $labels.mountpoint }} is in read-only mode."
+
+    # 🌐 High Network Usage
+    - alert: HighNetworkUsage
+      expr: (rate(node_network_receive_bytes_total[5m]) + rate(node_network_transmit_bytes_total[5m])) / (1024*1024) > 50
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High network usage on {{ $labels.instance }}"
+        description: "Network traffic is above 50 MB/s."
+        value: "{{ $value | printf \"%.2f\" }} MB/s"
+
+    # 🎮 GPU Alerts
+    - alert: HighGPUUtilization
+      expr: DCGM_FI_DEV_GPU_UTIL > 80
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High GPU utilization on {{ $labels.instance }}"
+        description: "GPU utilization is above 80%."
+        value: "{{ $value | printf \"%.2f\" }}%"
+
+    - alert: HighGPUMemory
+      expr: (DCGM_FI_DEV_FB_USED / DCGM_FI_DEV_FB_TOTAL) * 100 > 80
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High GPU memory usage on {{ $labels.instance }}"
+        description: "GPU memory usage is above 80%."
+        value: "{{ $value | printf \"%.2f\" }}%"
+
+    - alert: CriticalGPUMemory
+      expr: (DCGM_FI_DEV_FB_USED / DCGM_FI_DEV_FB_TOTAL) * 100 > 90
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "CRITICAL: GPU memory usage on {{ $labels.instance }}"
+        description: "GPU memory usage is above 90%."
+        value: "{{ $value | printf \"%.2f\" }}%"
+
+    - alert: HighGPUTemperature
+      expr: DCGM_FI_DEV_GPU_TEMP > 80
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High GPU temperature on {{ $labels.instance }}"
+        description: "GPU temperature is above 80°C."
+        value: "{{ $value | printf \"%.2f\" }}°C"

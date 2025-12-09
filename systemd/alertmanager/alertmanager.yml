@@ -1,0 +1,51 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: 'telegram'
+  group_by: ['alertname', 'instance', 'mountpoint']
+  group_wait: 5s
+  group_interval: 30s
+  repeat_interval: 4h
+
+receivers:
+  - name: 'telegram'
+    telegram_configs:
+      - bot_token: 'TELEGRAM_BOT_TOKEN'
+        api_url: 'https://api.telegram.org'
+        chat_id: -1003101123978 ##change it
+        message_thread_id: 4 ## also change or remove
+        parse_mode: 'HTML'
+        send_resolved: true
+        message: |
+          {{ if eq .Status "firing" }}
+          🔥 <b>{{ .CommonLabels.alertname }}</b> is FIRING!
+
+          <b>Instance:</b> <code>{{ .CommonLabels.instance }}</code>
+          {{ if .CommonLabels.mountpoint }}<b>Mountpoint:</b> <code>{{ .CommonLabels.mountpoint }}</code>{{ end }}
+          {{ if .CommonLabels.severity }}<b>Severity:</b> {{ .CommonLabels.severity }}{{ end }}
+
+          {{ range .Alerts -}}
+          {{ if .Annotations.summary }}<b>Alert:</b> {{ .Annotations.summary }}{{ end }}
+          {{ if .Annotations.value }}<b>Value:</b> {{ .Annotations.value }}{{ end }}
+          {{ if .Annotations.description }}
+          <b>Description:</b> {{ .Annotations.description }}{{ end }}
+          {{ if .Annotations.grafana }}
+          📊 <a href="{{ .Annotations.grafana }}">View in Grafana</a>{{ end }}
+          {{ end }}
+
+          {{ else if eq .Status "resolved" }}
+          ✅ <b>{{ .CommonLabels.alertname }}</b> has RECOVERED 🙌
+
+          <b>Instance:</b> <code>{{ .CommonLabels.instance }}</code>
+          {{ if .CommonLabels.mountpoint }}<b>Mountpoint:</b> <code>{{ .CommonLabels.mountpoint }}</code>{{ end }}
+
+          <b>Status:</b> Back to normal.
+          {{ end }}
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'instance']
